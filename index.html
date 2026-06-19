@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizarra - Olimpo PJUD</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="img/logo.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Roboto+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    
+    <!-- PANTALLA DE LOGIN -->
+    <div id="login-screen" class="login-body" style="display: none; height: 100vh; width: 100%;">
+        <div class="login-card">
+            <img src="img/logo.png" alt="Logo" class="login-logo">
+            <h2>Acceso Soporte</h2>
+            <p id="login-error" class="error" style="display:none;">Credenciales incorrectas</p>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Correo de usuario" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="submit" class="btn-primary" id="btn-login">Ingresar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PANTALLA PRINCIPAL -->
+    <div id="app-screen" style="display: none; width: 100%;">
+        
+        <header class="topbar">
+            <div class="brand">
+                <img src="img/logo.png" alt="Logo">
+                <h1>CORTE SUPREMA (OLIMPO)</h1>
+            </div>
+            <div class="topbar-controls">
+                <span class="user-badge"><i class="fa-solid fa-user-circle"></i> <span id="user-email-display"></span></span>
+                <button id="dark-mode-toggle" class="btn-icon" title="Modo Oscuro"><i class="fa-solid fa-moon"></i></button>
+                <button id="btn-logout" class="btn-icon text-danger" title="Cerrar Sesión"><i class="fa-solid fa-power-off"></i></button>
+            </div>
+        </header>
+
+        <div class="news-ticker">
+            <div class="ticker-title"><i class="fa-solid fa-newspaper"></i>NOTICIAS</div>
+            <div class="ticker-content">
+                <div class="ticker-wrap" id="news-container">
+                    <span class="news-item">Últimas noticias... <i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                </div>
+            </div>
+        </div>
+
+        <main class="pizarra-layout">
+            
+            <!-- COLUMNA IZQUIERDA -->
+            <aside class="col-side col-left">
+                <div class="card border-top-purple">
+                    <h3><i class="fa-solid fa-book"></i> Procedimientos</h3>
+                    <div class="proc-box">
+                        <h4><i class="fa-regular fa-folder-open"></i> Backup Puntos Críticos</h4>
+                        <ul class="compact-list">
+                            <li><strong>Explorer:</strong> Docs / Escritorio</li>
+                            <li><strong>Office:</strong> Plantillas</li>
+                            <li><strong>Chrome/Edge:</strong> Favoritos</li>
+                            <li><strong>Outlook:</strong> PST / Firmas</li>
+                            <li><strong>VPN:</strong> Perfiles</li>
+                            <li><strong>%Appdata%:</strong> Roaming</li>
+                        </ul>
+                    </div>
+                    <hr class="divider">
+                    <div class="proc-box">
+                        <h4><i class="fa-solid fa-fingerprint"></i> Biométrico</h4>
+                        <div class="tag-box">Java 341 + SafeNet 8.2</div>
+                        <div class="tag-box">Framework 3.4</div>
+                        <div class="tag-box">Framework 3.5</div>
+                    </div>
+                </div>
+
+                <!-- EL RELOJ FUE MOVIDO AQUÍ (IZQUIERDA) -->
+                <div class="card border-top-success" style="padding: 1rem; text-align: center;">
+                    <h3 style="margin-bottom: 10px; border-bottom: none; display: flex; justify-content: center; align-items: center; gap: 10px;">
+                        <i class="fa-regular fa-clock" style="color: #1DB954; font-size: 1.5rem;"></i> Hora Local
+                    </h3>
+                    <div id="live-clock" class="mono" style="font-size: 2.5rem; font-weight: 700; color: var(--text-main); line-height: 1;">
+                        00:00:00
+                    </div>
+                    <div id="live-date" style="font-size: 0.9rem; color: var(--text-muted); margin-top: 5px; text-transform: capitalize; font-weight: 500;">
+                        Cargando fecha...
+                    </div>
+                </div>
+
+                <div class="card border-top-success">
+                    <h3><i class="fa-solid fa-address-book"></i> Directorio</h3>
+                    <div class="contact-list">
+                        <div class="c-item"><i class="fa-solid fa-user"></i> <div><strong>Hugo Reinao</strong> <br><small>SITSUP</small></div> <span class="mono">2 3293 3603</span></div>
+                        <div class="c-item"><i class="fa-solid fa-user"></i> <div><strong>Fanny Alveal</strong> <br><small>SITSUP</small></div> <span class="mono">2 3293 3611</span></div>
+                        <div class="c-item"><i class="fa-solid fa-headset"></i> <div><strong>Javier Crisosto</strong> <br><small>SITCORTE</small></div> <span class="mono">2 3293 5066</span></div>
+                        <div class="c-item"><i class="fa-solid fa-print"></i> <div><strong>Flavio</strong> <br><small>Lexmark</small></div> <span class="mono">+56 9 4043 1284</span></div>
+                        <div class="c-item"><i class="fa-solid fa-microphone"></i> <div><strong>Audio</strong> <br><small>Audiencias</small></div> <span class="mono">5207</span></div>
+                        <div class="c-item"><i class="fa-solid fa-user"></i> <div><strong>Unidad De Servicios</strong></div> <span class="mono">5414</span></div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- COLUMNA CENTRAL -->
+            <section class="col-main">
+                <div class="card form-card">
+                    <form id="task-form" class="inline-form">
+                        <input type="hidden" id="task-id">
+                        
+                        <div class="input-wrapper input-title">
+                            <input type="text" id="task-title" placeholder="Título de solicitud..." required>
+                        </div>
+
+                        <div class="input-wrapper input-date">
+                            <input type="datetime-local" id="task-date" required title="Fecha y Hora de Agendamiento">
+                        </div>
+                        
+                        <div class="input-wrapper input-desc">
+                            <input type="text" id="task-desc" placeholder="Detalles adicionales...">
+                        </div>
+                        
+                        <div class="input-wrapper input-prio">
+                            <select id="task-prio">
+                                <option value="low">Baja</option>
+                                <option value="normal" selected>Normal</option>
+                                <option value="high">Alta</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn-primary" id="btn-save-task">
+                            <i class="fa-solid fa-plus"></i> Agregar
+                        </button>
+                        
+                        <button type="button" id="btn-cancel-edit" class="btn-icon btn-reset" style="display:none;" title="Cancelar"><i class="fa-solid fa-xmark"></i></button>
+                    </form>
+                </div>
+
+                <div class="agenda-header">
+                    <h2><i class="fa-solid fa-list-check"></i> Solicitudes Activas</h2>
+                    <div class="stats-badges">
+                        <span class="badge normal" id="stat-total">Total: 0</span>
+                        <span class="badge high" id="stat-high">Urgentes: 0</span>
+                    </div>
+                </div>
+
+                <div class="task-list" id="task-list-container">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-circle-notch fa-spin"></i>
+                        <p>Cargando tareas...</p>
+                    </div>
+                </div>
+
+                <!-- COPYRIGHT REPARADO (Al final de la columna central) -->
+                <div class="copyright-footer" style="text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">
+                    &copy; 2026 MARKUITUZ
+                </div>
+            </section>
+
+            <!-- COLUMNA DERECHA -->
+            <aside class="col-side col-right">
+                <div class="card border-top-primary">
+                    <h3><i class="fa-solid fa-key"></i> Credenciales</h3>
+                    <div class="cred-section">
+                        <div class="pass-item"><span>Uso remoto Win 10 (21H2)</span><div class="pass-display">S0p0rt3VnC</div></div>
+                        <div class="pass-item"><span>Uso remoto 600g1 (1809)</span><div class="pass-display">_Rm$.38tY%_8$#$pPw2J</div></div>
+                        <div class="pass-item"><span>Uso remoto antiguo</span><div class="pass-display">upgcontrol / pjudcapj</div></div>
+                        <div class="pass-item"><span>Código Kyocera</span><div class="pass-display">Admin / Admin</div></div>
+                        <div class="pass-item"><span>Código Lexmark</span><div class="pass-display">1409</div></div>
+                        
+                        <!-- MENÚ IMPRESORAS MOVIDO AQUÍ (DERECHA) -->
+                        <div class="pass-item"><span>Menú Servicio Impresoras PJUD4</span><div class="pass-display" style="color: #f59e0b;">#1934</div></div>
+                    </div>
+                    <hr class="divider">
+                    <div class="cred-section">
+                        <h4 class="text-warning"><i class="fa-solid fa-wifi"></i> Wifi Invitados (ACTUALIZADA)</h4>
+                        <div class="pass-item highlight-orange">
+                            <span class="text-dark">CLAVE RED:</span>
+                            <div class="pass-display red-text">For3.Inv15%06</div>
+                        </div>
+                        <div class="user-block mt-3">
+                            <div class="pass-item"><span>User 1:</span><div class="mono text-muted">invitados_cs</div></div>
+                            <div class="pass-item"><span>Pass 1:</span><div class="pass-display">$3GUr1D4d.01</div></div>
+                        </div>
+                        <div class="user-block mt-3">
+                            <div class="pass-item"><span>User 2:</span><div class="mono text-muted">invitados2_cs</div></div>
+                            <div class="pass-item"><span>Pass 2:</span><div class="pass-display">$3GUr1D4d.02</div></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <!-- PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                .then(reg => console.log('PWA SW registered'))
+                .catch(err => console.log('PWA SW error', err));
+            });
+        }
+    </script>
+    
+    <script src="app.js"></script>
+</body>
+</html>
