@@ -1,7 +1,8 @@
 // ==========================================
-// 1. CONFIGURACIÓN SUPABASE
+// 1. CONFIGURACIÓN SUPABASE (BYPASS PROXY)
 // ==========================================
-const SUPABASE_URL = 'https://rblhjdwpznpwjdkeukxk.supabase.co';
+// Ya no usamos la URL directa de Supabase, usamos el proxy interno de Vercel
+const SUPABASE_URL = window.location.origin + '/api-supabase';
 const SUPABASE_ANON_KEY = 'sb_publishable_TngSMyX8JcRPAh9Puenqmg_Egq50KV3';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -127,9 +128,7 @@ function renderTasks(tasks) {
         const dateObj = new Date(fechaString);
         const targetMs = dateObj.getTime();
         
-        // ========================================================
-        // AQUI GENERAMOS LA FECHA Y HORA VISIBLE PARA LA DERECHA
-        // ========================================================
+        // Generar la fecha visible (Ej: 15/05/2026 09:27)
         const displayDate = dateObj.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
                             dateObj.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
         
@@ -149,14 +148,10 @@ function renderTasks(tasks) {
                 </div>
             </div>
             
-            <!-- ZONA DERECHA: FECHA AGENDADA Y BOTONES -->
             <div class="task-actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                
-                <!-- CAJITA CON LA HORA EXACTA -->
                 <div style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--text-main); font-weight: 600; background: var(--bg-body); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);">
                     <i class="fa-regular fa-calendar-check" style="color: var(--primary);"></i> ${displayDate}
                 </div>
-                
                 <div class="btn-group">
                     <button class="btn-icon btn-edit" onclick="editTask(${task.id}, '${safeTitulo}', '${safeDesc}', '${task.fecha_agendada}', '${task.prioridad}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
                     <button class="btn-icon btn-del" onclick="archiveTask(${task.id})" title="Archivar"><i class="fa-solid fa-box-archive"></i></button>
@@ -320,38 +315,3 @@ toggleMode.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('dark', document.body.classList.contains('dark-mode'));
 });
-
-// ==========================================
-// 7. TICKER NOTICIAS RSS (GOOGLE NEWS CHILE)
-// ==========================================
-async function fetchNews() {
-    const newsContainer = document.getElementById('news-container');
-    const rssUrl = 'https://news.google.com/rss?hl=es-419&gl=CL&ceid=CL:es-419';
-    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssUrl)}`;
-
-    try {
-        const response = await fetch(apiUrl);
-        const data = await response.json();
-
-        if (data.status === 'ok' && data.items && data.items.length > 0) {
-            let newsHtml = '';
-            const limit = Math.min(data.items.length, 10);
-            
-            for (let i = 0; i < limit; i++) {
-                const item = data.items[i];
-                const cleanTitle = item.title.split(' - ')[0].trim(); 
-                newsHtml += `<span class="news-item"><a href="${item.link}" target="_blank" class="news-link">${cleanTitle}</a></span>`;
-            }
-            
-            newsContainer.innerHTML = newsHtml;
-            newsContainer.style.animationDuration = `${limit * 10}s`; 
-            
-        } else {
-            newsContainer.innerHTML = '<span class="news-item">Últimas noticias...</span>';
-        }
-    } catch (error) {
-        newsContainer.innerHTML = '<span class="news-item">Actualizando noticias...</span>';
-    }
-}
-fetchNews();
-setInterval(fetchNews, 900000);
