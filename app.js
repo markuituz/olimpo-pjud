@@ -1,8 +1,7 @@
 // ==========================================
-// 1. CONFIGURACIÓN SUPABASE (BYPASS PROXY)
+// 1. CONFIGURACIÓN SUPABASE
 // ==========================================
-// Ya no usamos la URL directa de Supabase, usamos el proxy interno de Vercel
-const SUPABASE_URL = window.location.origin + '/api-supabase';
+const SUPABASE_URL = 'https://rblhjdwpznpwjdkeukxk.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_TngSMyX8JcRPAh9Puenqmg_Egq50KV3';
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -33,7 +32,6 @@ async function checkAuth() {
     }
 }
 
-// Loguearse
 loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('email').value;
@@ -41,7 +39,7 @@ loginForm.addEventListener('submit', async (e) => {
     const btn = document.getElementById('btn-login');
     const errorMsg = document.getElementById('login-error');
 
-    btn.textContent = 'Cargando...';
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Cargando...';
     btn.disabled = true;
 
     const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -57,7 +55,6 @@ loginForm.addEventListener('submit', async (e) => {
     }
 });
 
-// Cerrar sesión
 document.getElementById('btn-logout').addEventListener('click', async () => {
     await supabaseClient.auth.signOut();
     checkAuth();
@@ -87,7 +84,6 @@ async function fetchTasks() {
         .order('fecha_agendada', { ascending: true });
 
     if (error) {
-        console.error("Error cargando tareas:", error);
         taskContainer.innerHTML = `
             <div class="empty-state">
                 <i class="fa-solid fa-triangle-exclamation"></i>
@@ -97,7 +93,6 @@ async function fetchTasks() {
     }
 
     renderTasks(data);
-
     document.getElementById('stat-total').textContent = `Total: ${data.length}`;
     document.getElementById('stat-high').textContent = `Urgentes: ${data.filter(t => t.prioridad === 'high').length}`;
 }
@@ -128,7 +123,6 @@ function renderTasks(tasks) {
         const dateObj = new Date(fechaString);
         const targetMs = dateObj.getTime();
         
-        // Generar la fecha visible (Ej: 15/05/2026 09:27)
         const displayDate = dateObj.toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + 
                             dateObj.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
         
@@ -149,12 +143,14 @@ function renderTasks(tasks) {
             </div>
             
             <div class="task-actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                <div style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--text-main); font-weight: 600; background: var(--bg-body); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);">
+                <div style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--text-main); font-weight: 600; background: var(--bg-body); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);">
                     <i class="fa-regular fa-calendar-check" style="color: var(--primary);"></i> ${displayDate}
                 </div>
+                
                 <div class="btn-group">
                     <button class="btn-icon btn-edit" onclick="editTask(${task.id}, '${safeTitulo}', '${safeDesc}', '${task.fecha_agendada}', '${task.prioridad}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                    <button class="btn-icon btn-del" onclick="archiveTask(${task.id})" title="Archivar"><i class="fa-solid fa-box-archive"></i></button>
+                    <!-- BOTÓN ARCHIVAR / REQUERIMIENTO -->
+                    <button class="btn-icon btn-del" onclick="askArchive(${task.id})" title="Archivar / Completar"><i class="fa-solid fa-box-archive"></i></button>
                 </div>
             </div>
         </div>`;
@@ -162,7 +158,6 @@ function renderTasks(tasks) {
     });
 }
 
-// Guardar / Actualizar
 taskForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -196,7 +191,6 @@ taskForm.addEventListener('submit', async (e) => {
     fetchTasks();
 });
 
-// Editar
 window.editTask = function(id, titulo, desc, fecha, prio) {
     document.getElementById('task-id').value = id;
     document.getElementById('task-title').value = titulo.replace(/&quot;/g, '"');
@@ -225,16 +219,83 @@ btnCancel.addEventListener('click', () => {
     btnCancel.style.display = 'none';
 });
 
-window.archiveTask = async function(id) {
-    if (confirm('¿Estás seguro de archivar esta tarea?')) {
-        const { error } = await supabaseClient.from('agenda').update({ estado: 0 }).eq('id', parseInt(id));
-        if (error) alert('Error al archivar: ' + error.message);
-        else fetchTasks();
+
+// ==========================================
+// 4. LÓGICA DE MODALES (ARCHIVAR & REQUERIMIENTOS)
+// ==========================================
+let currentArchivingId = null;
+
+window.askArchive = function(id) {
+    currentArchivingId = id;
+    document.getElementById('modal-overlay').style.display = 'flex';
+    document.getElementById('modal-question').style.display = 'block';
+    document.getElementById('modal-req-form').style.display = 'none';
+}
+
+window.proceedArchiveOnly = async function() {
+    await executeArchive(currentArchivingId);
+    closeModal();
+}
+
+window.showReqForm = function() {
+    document.getElementById('modal-question').style.display = 'none';
+    document.getElementById('modal-req-form').style.display = 'block';
+    document.getElementById('req-task-id').value = currentArchivingId;
+}
+
+window.closeModal = function() {
+    document.getElementById('modal-overlay').style.display = 'none';
+    currentArchivingId = null;
+    document.getElementById('req-form').reset();
+}
+
+async function executeArchive(id) {
+    const { error } = await supabaseClient.from('agenda').update({ estado: 0 }).eq('id', parseInt(id));
+    if (error) {
+        alert('Error al archivar: ' + error.message);
+    } else {
+        fetchTasks();
     }
 }
 
+document.getElementById('req-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btnSaveReq = document.getElementById('btn-save-req');
+    btnSaveReq.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+    btnSaveReq.disabled = true;
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    const userEmail = session ? session.user.email : 'Desconocido';
+
+    const reqData = {
+        tarea_id: parseInt(document.getElementById('req-task-id').value),
+        proyecto: document.getElementById('req-proyecto').value,
+        rut: document.getElementById('req-rut').value,
+        dependencia: document.getElementById('req-dependencia').value,
+        modelo_equipo: document.getElementById('req-modelo').value,
+        n_serie: document.getElementById('req-serie').value,
+        reporte_problema: document.getElementById('req-problema').value,
+        solucion_aplicada: document.getElementById('req-solucion').value,
+        creado_por: userEmail
+    };
+
+    const { error } = await supabaseClient.from('requerimientos').insert([reqData]);
+
+    if (error) {
+        alert('Error al guardar requerimiento: ' + error.message);
+        btnSaveReq.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar Requerimiento';
+        btnSaveReq.disabled = false;
+    } else {
+        await executeArchive(reqData.tarea_id);
+        closeModal();
+        btnSaveReq.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Guardar Requerimiento';
+        btnSaveReq.disabled = false;
+    }
+});
+
+
 // ==========================================
-// 4. SEMÁFOROS (Cuenta regresiva)
+// 5. SEMÁFOROS (Cuenta regresiva)
 // ==========================================
 function updateSemaphores() {
     const now = new Date().getTime();
@@ -289,8 +350,9 @@ function updateSemaphores() {
 }
 setInterval(updateSemaphores, 1000);
 
+
 // ==========================================
-// 5. RELOJ AM/PM
+// 6. RELOJ AM/PM LOCAL
 // ==========================================
 function updateClock() {
     const now = new Date();
@@ -306,8 +368,9 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock(); 
 
+
 // ==========================================
-// 6. MODO OSCURO
+// 7. MODO OSCURO
 // ==========================================
 const toggleMode = document.getElementById('dark-mode-toggle');
 if (localStorage.getItem('dark') === 'true') document.body.classList.add('dark-mode');
@@ -315,3 +378,45 @@ toggleMode.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('dark', document.body.classList.contains('dark-mode'));
 });
+
+
+// ==========================================
+// 8. TICKER NOTICIAS (COOPERATIVA CHILE)
+// ==========================================
+async function fetchNews() {
+    const newsContainer = document.getElementById('news-container');
+    const rssUrl = 'https://www.cooperativa.cl/noticias/site/tax/port/all/rss____1.xml';
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+
+    try {
+        const response = await fetch(proxyUrl);
+        const data = await response.json();
+
+        if (data.contents) {
+            const parser = new DOMParser();
+            const xml = parser.parseFromString(data.contents, "text/xml");
+            const items = xml.querySelectorAll("item");
+
+            if (items.length > 0) {
+                let newsHtml = '';
+                const limit = Math.min(items.length, 10);
+                
+                for (let i = 0; i < limit; i++) {
+                    let title = items[i].querySelector("title").textContent;
+                    let link = items[i].querySelector("link").textContent;
+                    newsHtml += `<span class="news-item"><a href="${link}" target="_blank" class="news-link">${title}</a></span>`;
+                }
+                
+                newsContainer.innerHTML = newsHtml;
+                newsContainer.style.animationDuration = `${limit * 12}s`; 
+                return;
+            }
+        }
+        newsContainer.innerHTML = '<span class="news-item">Sin noticias recientes...</span>';
+    } catch (error) {
+        console.error("Error RSS:", error);
+        newsContainer.innerHTML = '<span class="news-item">Actualizando noticias...</span>';
+    }
+}
+fetchNews();
+setInterval(fetchNews, 900000);
