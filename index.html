@@ -40,6 +40,9 @@
                 <h1>CORTE SUPREMA (OLIMPO)</h1>
             </div>
             <div class="topbar-controls">
+                <!-- AQUÍ ESTÁ EL BOTÓN HISTORIAL DE VUELTA -->
+                <button id="btn-show-history" class="btn-history" onclick="showHistory()"><i class="fa-solid fa-list-ul"></i> Historial Tickets</button>
+                
                 <span class="user-badge"><i class="fa-solid fa-user-circle"></i> <span id="user-email-display"></span></span>
                 <button id="dark-mode-toggle" class="btn-icon" title="Modo Oscuro"><i class="fa-solid fa-moon"></i></button>
                 <button id="btn-logout" class="btn-icon text-danger" title="Cerrar Sesión"><i class="fa-solid fa-power-off"></i></button>
@@ -72,6 +75,7 @@
                     </div>
                 </div>
 
+                <!-- EL RELOJ A LA IZQUIERDA -->
                 <div class="card border-top-success" style="padding: 1rem; text-align: center;">
                     <h3 style="margin-bottom: 10px; border-bottom: none; display: flex; justify-content: center; align-items: center; gap: 10px;">
                         <i class="fa-regular fa-clock" style="color: #1DB954; font-size: 1.5rem;"></i> Hora Local
@@ -147,7 +151,7 @@
                 </div>
 
                 <!-- COPYRIGHT -->
-                <div class="copyright-footer">
+                <div class="copyright-footer" style="text-align: center; margin-top: 1rem; color: var(--text-muted); font-size: 0.8rem; font-weight: bold; letter-spacing: 1px;">
                     &copy; 2026 MARKUITUZ
                 </div>
             </section>
@@ -162,23 +166,15 @@
                         <div class="pass-item"><span>Uso remoto antiguo</span><div class="pass-display">upgcontrol / pjudcapj</div></div>
                         <div class="pass-item"><span>Kyocera</span><div class="pass-display">Admin / Admin</div></div>
                         <div class="pass-item"><span>Lexmark</span><div class="pass-display">1409</div></div>
+                        
+                        <!-- MENÚ IMPRESORAS A LA DERECHA -->
+                        <div class="pass-item"><span>Menú Servicio Impresoras</span><div class="pass-display" style="color: #f59e0b;">#1934</div></div>
                     </div>
-                    
                     <hr class="divider">
-                    
-                    <div class="cred-section">
-                        <!-- Menú Impresoras trasladado a Credenciales -->
-                        <h4 class="text-primary" style="color: #f59e0b;"><i class="fa-solid fa-screwdriver-wrench"></i> Menú Impresoras</h4>
-                        <div class="pass-item"><span>Samsung / HP</span><div class="pass-display" style="color: #f59e0b; font-size: 1.2rem;">#1934</div></div>
-                    </div>
-
-                    <hr class="divider">
-                    
                     <div class="cred-section">
                         <h4 class="text-warning"><i class="fa-solid fa-wifi"></i> Wifi Invitados (ACTUALIZADA)</h4>
                         <div class="pass-item highlight-orange">
                             <span class="text-dark">CLAVE RED:</span>
-                            <!-- NUEVA CLAVE ACTUALIZADA AQUÍ -->
                             <div class="pass-display red-text">Pj.invOc$0110%</div>
                         </div>
                         <div class="user-block mt-3">
@@ -193,96 +189,106 @@
                 </div>
             </aside>
         </main>
-        
-        <!-- ==========================================
-             MODALES (PREGUNTA Y FORMULARIO)
-        ========================================== -->
-        <div id="modal-overlay" class="modal-overlay" style="display: none;">
-            
-            <!-- MODAL 1: PREGUNTA -->
-            <div id="modal-question" class="modal-card" style="display: none;">
-                <div class="modal-header">
-                    <h3><i class="fa-solid fa-box-archive"></i> Archivar Solicitud</h3>
-                    <button class="btn-close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="modal-body" style="text-align: center; padding: 20px 0;">
-                    <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px;">La tarea ha finalizado.<br>¿Deseas generar un requerimiento de servicio?</p>
-                    <div style="display: flex; gap: 15px; justify-content: center;">
-                        <button class="btn-cancel-modal" onclick="proceedArchiveOnly()" style="width: auto;">No, solo archivar</button>
-                        <button class="btn-primary" onclick="showReqForm()" style="width: auto;"><i class="fa-solid fa-file-signature"></i> Sí, generar</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MODAL 2: FORMULARIO DE REQUERIMIENTO -->
-            <div id="modal-req-form" class="modal-card modal-large" style="display: none;">
-                <div class="modal-header">
-                    <h3>Nuevo Servicio (Requerimiento)</h3>
-                    <button class="btn-close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
-                </div>
-                <div class="modal-body">
-                    <form id="req-form" class="req-form-grid">
-                        <input type="hidden" id="req-task-id">
-                        
-                        <div class="form-group full-width">
-                            <label>Proyecto (*)</label>
-                            <select id="req-proyecto" required>
-                                <option value="">Seleccione...</option>
-                                <option value="PJUD 4">PJUD 4</option>
-                                <option value="PJUD 5">PJUD 5</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label>RUT (*)</label>
-                            <input type="text" id="req-rut" placeholder="12.345.678-9" required>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label>Dependencia (*)</label>
-                            <input type="text" id="req-dependencia" required>
-                        </div>
-
-                        <div class="form-group half-width">
-                            <label>Modelo Equipo (*)</label>
-                            <input type="text" id="req-modelo" required>
-                        </div>
-
-                        <div class="form-group half-width">
-                            <label>N° Serie (*)</label>
-                            <input type="text" id="req-serie" required>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label>Reporte del problema (*)</label>
-                            <textarea id="req-problema" rows="3" required></textarea>
-                        </div>
-
-                        <div class="form-group full-width">
-                            <label>Solución aplicada (*)</label>
-                            <textarea id="req-solucion" rows="3" required></textarea>
-                        </div>
-
-                        <div class="form-group full-width" style="margin-top: 10px;">
-                            <button type="submit" class="btn-primary btn-block" id="btn-save-req">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Guardar Requerimiento
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-        </div> <!-- Fin Modales -->
-        
     </div>
+        
+    <!-- ==========================================
+         MODALES (PREGUNTA, FORMULARIO Y TICKETS)
+    ========================================== -->
+    <div id="modal-overlay" class="modal-overlay" style="display: none;">
+        
+        <!-- MODAL 1: PREGUNTA AL ARCHIVAR -->
+        <div id="modal-question" class="modal-card" style="display: none;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-box-archive"></i> Archivar Solicitud</h3>
+                <button class="btn-close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 20px 0;">
+                <p style="font-size: 1.1rem; color: var(--text-main); margin-bottom: 20px;">La tarea ha finalizado.<br>¿Deseas generar un requerimiento de servicio?</p>
+                <div style="display: flex; gap: 15px; justify-content: center;">
+                    <button class="btn-cancel-modal" onclick="proceedArchiveOnly()" style="width: auto;">No, solo archivar</button>
+                    <button class="btn-primary" onclick="showReqForm()" style="width: auto;"><i class="fa-solid fa-file-signature"></i> Sí, generar</button>
+                </div>
+            </div>
+        </div>
 
-    <!-- PWA SW -->
+        <!-- MODAL 2: FORMULARIO DE REQUERIMIENTO -->
+        <div id="modal-req-form" class="modal-card modal-large" style="display: none;">
+            <div class="modal-header">
+                <h3>Nuevo Servicio (Requerimiento)</h3>
+                <button class="btn-close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="req-form" class="req-form-grid">
+                    <input type="hidden" id="req-task-id">
+                    
+                    <div class="form-group full-width">
+                        <label>Proyecto (*)</label>
+                        <select id="req-proyecto" required>
+                            <option value="">Seleccione...</option>
+                            <option value="PJUD 4">PJUD 4</option>
+                            <option value="PJUD 5">PJUD 5</option>
+                            <option value="PROPIEDAD PJUD">PROPIEDAD PJUD</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>RUT (*)</label>
+                        <input type="text" id="req-rut" placeholder="12.345.678-9" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Dependencia (*)</label>
+                        <input type="text" id="req-dependencia" required>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>Modelo Equipo (*)</label>
+                        <input type="text" id="req-modelo" required>
+                    </div>
+
+                    <div class="form-group half-width">
+                        <label>N° Serie (*)</label>
+                        <input type="text" id="req-serie" required>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Descripción (*)</label>
+                        <textarea id="req-problema" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group full-width">
+                        <label>Solución (*)</label>
+                        <textarea id="req-solucion" rows="3" required></textarea>
+                    </div>
+
+                    <div class="form-group full-width" style="margin-top: 10px;">
+                        <button type="submit" class="btn-primary btn-block" id="btn-save-req">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Guardar Requerimiento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- MODAL 3: HISTORIAL DE TICKETS (GRILLA) -->
+        <div id="modal-history" class="modal-card modal-xlarge" style="display: none;">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-list-ul"></i> Historial de Requerimientos</h3>
+                <button class="btn-close-modal" onclick="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="background: var(--bg-body); padding: 15px;">
+                <div id="history-container" class="history-grid">
+                    <div style="text-align: center; width: 100%; padding: 2rem;"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando historial...</div>
+                </div>
+            </div>
+        </div>
+
+    </div> 
+    
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
-                .then(reg => console.log('PWA SW registered'))
-                .catch(err => console.log('PWA SW error', err));
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('PWA SW error', err));
             });
         }
     </script>

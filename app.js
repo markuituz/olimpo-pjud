@@ -1,5 +1,5 @@
 // ==========================================
-// 1. CONFIGURACIÓN SUPABASE
+// 1. CONFIGURACIÓN SUPABASE (TUS CLAVES REALES)
 // ==========================================
 const SUPABASE_URL = 'https://rblhjdwpznpwjdkeukxk.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_TngSMyX8JcRPAh9Puenqmg_Egq50KV3';
@@ -71,11 +71,7 @@ const btnSave = document.getElementById('btn-save-task');
 const btnCancel = document.getElementById('btn-cancel-edit');
 
 async function fetchTasks() {
-    taskContainer.innerHTML = `
-        <div class="empty-state">
-            <i class="fa-solid fa-circle-notch fa-spin"></i>
-            <p>Cargando tareas...</p>
-        </div>`;
+    taskContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-circle-notch fa-spin"></i><p>Cargando tareas...</p></div>`;
 
     const { data, error } = await supabaseClient
         .from('agenda')
@@ -84,11 +80,7 @@ async function fetchTasks() {
         .order('fecha_agendada', { ascending: true });
 
     if (error) {
-        taskContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <p>Error al cargar tareas: ${error.message}</p>
-            </div>`;
+        taskContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-triangle-exclamation"></i><p>Error al cargar tareas: ${error.message}</p></div>`;
         return;
     }
 
@@ -104,11 +96,7 @@ function escapeHTML(str) {
 
 function renderTasks(tasks) {
     if (tasks.length === 0) {
-        taskContainer.innerHTML = `
-            <div class="empty-state">
-                <i class="fa-solid fa-mug-hot"></i>
-                <p>No hay tareas pendientes en este momento.</p>
-            </div>`;
+        taskContainer.innerHTML = `<div class="empty-state"><i class="fa-solid fa-mug-hot"></i><p>No hay tareas pendientes en este momento.</p></div>`;
         return;
     }
 
@@ -143,13 +131,12 @@ function renderTasks(tasks) {
             </div>
             
             <div class="task-actions" style="display: flex; flex-direction: column; align-items: flex-end; gap: 8px;">
-                <div style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--text-main); font-weight: 600; background: var(--bg-body); padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border);">
+                <div style="font-family: 'Roboto Mono', monospace; font-size: 0.85rem; color: var(--text-main); font-weight: 600; background: var(--bg-body); padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border);">
                     <i class="fa-regular fa-calendar-check" style="color: var(--primary);"></i> ${displayDate}
                 </div>
                 
                 <div class="btn-group">
                     <button class="btn-icon btn-edit" onclick="editTask(${task.id}, '${safeTitulo}', '${safeDesc}', '${task.fecha_agendada}', '${task.prioridad}')" title="Editar"><i class="fa-solid fa-pen"></i></button>
-                    <!-- BOTÓN ARCHIVAR / REQUERIMIENTO -->
                     <button class="btn-icon btn-del" onclick="askArchive(${task.id})" title="Archivar / Completar"><i class="fa-solid fa-box-archive"></i></button>
                 </div>
             </div>
@@ -219,17 +206,18 @@ btnCancel.addEventListener('click', () => {
     btnCancel.style.display = 'none';
 });
 
-
 // ==========================================
-// 4. LÓGICA DE MODALES (ARCHIVAR & REQUERIMIENTOS)
+// 4. LÓGICA DE MODALES E HISTORIAL
 // ==========================================
 let currentArchivingId = null;
 
+// Abrir Pregunta Archivar
 window.askArchive = function(id) {
     currentArchivingId = id;
     document.getElementById('modal-overlay').style.display = 'flex';
     document.getElementById('modal-question').style.display = 'block';
     document.getElementById('modal-req-form').style.display = 'none';
+    document.getElementById('modal-history').style.display = 'none';
 }
 
 window.proceedArchiveOnly = async function() {
@@ -237,12 +225,66 @@ window.proceedArchiveOnly = async function() {
     closeModal();
 }
 
+// Abrir Formulario
 window.showReqForm = function() {
     document.getElementById('modal-question').style.display = 'none';
     document.getElementById('modal-req-form').style.display = 'block';
     document.getElementById('req-task-id').value = currentArchivingId;
 }
 
+// Mostrar Historial de Requerimientos
+window.showHistory = async function() {
+    document.getElementById('modal-overlay').style.display = 'flex';
+    document.getElementById('modal-question').style.display = 'none';
+    document.getElementById('modal-req-form').style.display = 'none';
+    document.getElementById('modal-history').style.display = 'flex'; 
+    
+    const container = document.getElementById('history-container');
+    container.innerHTML = '<div style="text-align:center; width:100%; padding:2rem;"><i class="fa-solid fa-circle-notch fa-spin"></i> Cargando historial...</div>';
+
+    const { data, error } = await supabaseClient
+        .from('requerimientos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+    if (error) {
+        container.innerHTML = `<div class="error" style="text-align:center; width:100%;">Error al cargar: ${error.message}</div>`;
+        return;
+    }
+
+    if (data.length === 0) {
+        container.innerHTML = '<div style="text-align:center; width:100%; color:var(--text-muted);">No hay requerimientos registrados aún.</div>';
+        return;
+    }
+
+    container.innerHTML = '';
+    data.forEach(req => {
+        const d = new Date(req.created_at);
+        const fecha = d.toLocaleDateString('es-CL');
+        
+        const html = `
+        <div class="ticket-card">
+            <div class="ticket-header">
+                <span class="ticket-proj"><i class="fa-solid fa-tag"></i> ${req.proyecto}</span>
+                <span class="ticket-date">${fecha}</span>
+            </div>
+            <div class="ticket-body">
+                <p><strong>Dependencia:</strong> ${req.dependencia}</p>
+                <p><strong>RUT:</strong> ${req.rut}</p>
+                <p><strong>Modelo:</strong> ${req.modelo_equipo} (S/N: ${req.n_serie})</p>
+                <hr style="border:0; border-top:1px solid var(--border); margin:5px 0;">
+                <p><strong>Descripción:</strong> ${escapeHTML(req.reporte_problema)}</p>
+                <p><strong>Solución:</strong> ${escapeHTML(req.solucion_aplicada)}</p>
+            </div>
+            <div class="ticket-footer">
+                <i class="fa-solid fa-user"></i> Creado por: ${req.creado_por.split('@')[0]}
+            </div>
+        </div>`;
+        container.insertAdjacentHTML('beforeend', html);
+    });
+}
+
+// Cerrar todos los modales
 window.closeModal = function() {
     document.getElementById('modal-overlay').style.display = 'none';
     currentArchivingId = null;
@@ -258,6 +300,7 @@ async function executeArchive(id) {
     }
 }
 
+// Enviar el Formulario de Requerimiento
 document.getElementById('req-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btnSaveReq = document.getElementById('btn-save-req');
@@ -292,7 +335,6 @@ document.getElementById('req-form').addEventListener('submit', async (e) => {
         btnSaveReq.disabled = false;
     }
 });
-
 
 // ==========================================
 // 5. SEMÁFOROS (Cuenta regresiva)
@@ -350,7 +392,6 @@ function updateSemaphores() {
 }
 setInterval(updateSemaphores, 1000);
 
-
 // ==========================================
 // 6. RELOJ AM/PM LOCAL
 // ==========================================
@@ -368,7 +409,6 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock(); 
 
-
 // ==========================================
 // 7. MODO OSCURO
 // ==========================================
@@ -378,45 +418,3 @@ toggleMode.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('dark', document.body.classList.contains('dark-mode'));
 });
-
-
-// ==========================================
-// 8. TICKER NOTICIAS (COOPERATIVA CHILE)
-// ==========================================
-async function fetchNews() {
-    const newsContainer = document.getElementById('news-container');
-    const rssUrl = 'https://www.cooperativa.cl/noticias/site/tax/port/all/rss____1.xml';
-    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
-
-    try {
-        const response = await fetch(proxyUrl);
-        const data = await response.json();
-
-        if (data.contents) {
-            const parser = new DOMParser();
-            const xml = parser.parseFromString(data.contents, "text/xml");
-            const items = xml.querySelectorAll("item");
-
-            if (items.length > 0) {
-                let newsHtml = '';
-                const limit = Math.min(items.length, 10);
-                
-                for (let i = 0; i < limit; i++) {
-                    let title = items[i].querySelector("title").textContent;
-                    let link = items[i].querySelector("link").textContent;
-                    newsHtml += `<span class="news-item"><a href="${link}" target="_blank" class="news-link">${title}</a></span>`;
-                }
-                
-                newsContainer.innerHTML = newsHtml;
-                newsContainer.style.animationDuration = `${limit * 12}s`; 
-                return;
-            }
-        }
-        newsContainer.innerHTML = '<span class="news-item">Sin noticias recientes...</span>';
-    } catch (error) {
-        console.error("Error RSS:", error);
-        newsContainer.innerHTML = '<span class="news-item">Actualizando noticias...</span>';
-    }
-}
-fetchNews();
-setInterval(fetchNews, 900000);
